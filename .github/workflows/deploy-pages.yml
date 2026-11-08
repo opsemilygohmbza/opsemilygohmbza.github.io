@@ -32,6 +32,8 @@ jobs:
           node scripts/validate-portal.mjs
           node --test scripts/test-portal.mjs
       - name: Build reachable game catalog
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
         run: node scripts/build-catalog.mjs
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3

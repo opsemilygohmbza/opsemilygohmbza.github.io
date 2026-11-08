@@ -1,12 +1,17 @@
 import fs from 'node:fs/promises';
 import { resolveGameUrl } from '../portal-lib.mjs';
 import {checkPagesEntry} from './check-pages-entry.mjs';
+import {readCanonicalCatalog} from './read-canonical-catalog.mjs';
 
 const config = JSON.parse(await fs.readFile('config.json', 'utf8'));
-const sourceUrl = process.env.CATALOG_SOURCE_URL || 'https://raw.githubusercontent.com/opsemilygohmbza/game-index-runner/main/list.json';
+const sourceUrl = process.env.CATALOG_SOURCE_URL || 'https://api.github.com/repos/opsemilygohmbza/game-index-runner/contents/list.json?ref=main';
+let sourceBlobSha;
 const source = process.env.CATALOG_SOURCE_FILE
   ? JSON.parse(await fs.readFile(process.env.CATALOG_SOURCE_FILE, 'utf8'))
-  : await fetchJson(sourceUrl);
+  : process.env.CATALOG_SOURCE_URL?await fetchJson(sourceUrl):await (async()=>{
+    const canonical=await readCanonicalCatalog({token:process.env.GITHUB_TOKEN||''});
+    sourceBlobSha=canonical.blobSha;return canonical.entries;
+  })();
 if (!Array.isArray(source)) throw new Error('Canonical catalog must be an array');
 const allowed = new Set(config.allowedGameHosts);
 const candidates = source.filter(game => {
@@ -28,7 +33,7 @@ await Promise.all(Array.from({ length: 5 }, async () => {
 const games = results.filter(result => result.ok).map(result => result.game).sort((a,b) => a.id.localeCompare(b.id));
 if (candidates.length && !games.length) throw new Error('All own-Pages candidates failed; keeping last successful deployment');
 const manifest = {
-  generatedAt: new Date().toISOString(), sourceUrl, sourceCount: source.length,
+  generatedAt: new Date().toISOString(), sourceUrl, sourceBlobSha, sourceCount: source.length,
   candidateCount: candidates.length, publishedCount: games.length,
   runtimePassedCount: games.filter(game => game.runtime?.status === 'passed').length,
   pendingCount: source.length - games.length,

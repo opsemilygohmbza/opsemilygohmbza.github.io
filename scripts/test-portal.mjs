@@ -2,6 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { resolveGameUrl, getAdsForSlot } from '../portal-lib.mjs';
 import {checkPagesEntry} from './check-pages-entry.mjs';
+import {readCanonicalCatalog} from './read-canonical-catalog.mjs';
 
 test('entry paths: preserve case and nested path; reject escaping URLs', () => {
   const root = 'https://opsemilygohmbza.github.io/Owner-Game/';
@@ -30,4 +31,16 @@ test('portal accepts MZ dynamic main startup but rejects unrelated HTML and cros
   assert.deepEqual(await checkPagesEntry('https://example.test/game/index.html',request),{type:'dynamic-main'});
   await assert.rejects(checkPagesEntry('https://example.test/game/',async()=>new Response('<html>not a game</html>',{headers:{'content-type':'text/html'}})),/does not reference/);
   await assert.rejects(checkPagesEntry('https://example.test/game/',async()=>new Response('<script src="https://other.test/js/main.js"></script>',{headers:{'content-type':'text/html'}})),/does not reference/);
+});
+
+test('large canonical catalog is loaded by immutable blob SHA, never stale raw/main',async()=>{
+  const sha='a'.repeat(40);const calls=[];
+  const games=[{id:'fresh-game',runtime:{status:'passed'}}];
+  const result=await readCanonicalCatalog({request:async(url,options)=>{
+    calls.push(String(url));assert.equal(options.redirect,'error');
+    return new Response(JSON.stringify(String(url).includes('contents/')?{sha,encoding:'none'}:{sha,encoding:'base64',content:Buffer.from(JSON.stringify(games)).toString('base64')}));
+  }});
+  assert.deepEqual(result,{entries:games,blobSha:sha});
+  assert.equal(calls.length,2);assert.match(calls[1],new RegExp(`git/blobs/${sha}$`));
+  assert.ok(calls.every(url=>!url.includes('raw.githubusercontent.com')));
 });
