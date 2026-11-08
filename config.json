@@ -1,0 +1,25 @@
+{
+  "siteName": "ecy.al",
+  "title": "Web RPG",
+  "tagline": "请务必收藏发布页，回家不迷路",
+  "description": "发现公开 Web RPG 作品，在线体验网页角色扮演游戏。",
+  "publishUrl": "https://ecy.al",
+  "acquireUrl": "https://pipifu.com",
+  "launcherPath": "/play.html",
+  "catalogEndpoints": ["/games.json"],
+  "adsEndpoints": ["/ads.json"],
+  "runtimeConfigEndpoints": [],
+  "allowedGameHosts": ["opsemilygohmbza.github.io", "yx.ecy.al"],
+  "defaultCoverUrl": "/assets/cover-placeholder.svg",
+  "iframeSandbox": "allow-scripts allow-same-origin allow-forms allow-modals allow-pointer-lock allow-presentation allow-downloads",
+  "analytics": {
+    "endpoint": "",
+    "siteId": "rpg-portal"
+  },
+  "gameAd": {
+    "enabled": true,
+    "startDelaySeconds": 45,
+    "repeatSeconds": 600,
+    "closeDelaySeconds": 5
+  }
+}

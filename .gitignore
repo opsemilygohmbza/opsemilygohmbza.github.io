@@ -1,0 +1,4 @@
+dist/
+games.json
+catalog-manifest.json
+.DS_Store

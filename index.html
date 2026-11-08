@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="zh-Hans">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="发现公开 Web RPG 作品，在线体验网页角色扮演游戏。" />
+    <meta name="referrer" content="strict-origin-when-cross-origin" />
+    <meta name="theme-color" content="#17100a" />
+    <title>Web RPG · ecy.al</title>
+    <link rel="icon" type="image/webp" href="/assets/brand-avatar.webp" />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div class="site-shell">
+      <div class="site-scrim">
+        <aside class="ad-slot ad-slot--header" aria-label="推广">
+          <a id="header-ad" target="_blank" rel="noopener noreferrer sponsored"></a>
+        </aside>
+
+        <header class="hero-band">
+          <div class="brand-lockup">
+            <div class="brand-mark" aria-hidden="true"><img src="/assets/brand-avatar.webp" width="48" height="48" alt="" decoding="async" /></div>
+            <div class="brand-text">
+              <h1>Web RPG</h1>
+              <p id="tagline">请务必收藏发布页，回家不迷路</p>
+            </div>
+          </div>
+
+          <div class="hero-actions">
+            <div class="language-switch" role="group" aria-label="语言">
+              <button type="button" class="pixel-button language-button is-active" data-language="zh-Hans" aria-pressed="true">中</button>
+              <button type="button" class="pixel-button language-button" data-language="en" aria-pressed="false">EN</button>
+              <button type="button" class="pixel-button language-button" data-language="ja" aria-pressed="false">日</button>
+            </div>
+
+            <a id="publish-link" class="pixel-button publish-button" href="https://ecy.al" target="_blank" rel="noopener noreferrer">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="18" r="3"></circle><circle cx="6" cy="6" r="3"></circle><circle cx="18" cy="6" r="3"></circle><path d="M18 9v2c0 .6-.4 1-1 1H7c-.6 0-1-.4-1-1V9M12 12v3"></path></svg>
+              <span>发布页</span>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 3h6v6M10 14 21 3M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path></svg>
+            </a>
+
+            <button id="reload" type="button" class="pixel-button reload-button" aria-label="重新加载目录" title="重新加载目录">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8.1 8.1 0 1 0 2.2 5.5M20 4v7h-7"></path></svg>
+            </button>
+          </div>
+        </header>
+
+        <section class="command-band" aria-label="搜索游戏">
+          <div class="search-row">
+            <svg class="search-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+            <label class="sr-only" for="search">搜索标题、作者或仓库名</label>
+            <input id="search" type="search" autocomplete="off" placeholder="搜索标题、作者或仓库名" />
+          </div>
+        </section>
+
+        <aside class="ad-slot ad-slot--search" aria-label="推广">
+          <a id="search-ad" target="_blank" rel="noopener noreferrer sponsored"></a>
+        </aside>
+
+        <p id="catalog-status" class="catalog-status" role="status">正在读取游戏目录…</p>
+        <main id="catalog" class="catalog-grid" aria-live="polite"><div class="state-card list-loading" role="status">正在读取游戏目录<span aria-hidden="true">…</span></div></main>
+        <div id="load-sentinel" aria-hidden="true"></div>
+
+        <footer class="site-footer">
+          <p>游戏版权归各项目作者所有 · 广告与获取链接可通过独立配置更新 · <a id="footer-publish" href="https://ecy.al" target="_blank" rel="noopener noreferrer">永久发布页</a></p>
+        </footer>
+      </div>
+    </div>
+
+    <template id="game-card-template">
+      <article class="game-card">
+        <div class="cover-frame">
+          <img class="cover-base" alt="" aria-hidden="true" loading="lazy" decoding="async" />
+          <img class="cover-image" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" />
+        </div>
+        <div class="game-body">
+          <div class="game-heading">
+            <h2 class="game-title"></h2>
+            <p class="game-repo"></p>
+          </div>
+          <div class="game-meta">
+            <span class="badge engine"></span>
+            <span class="badge size" hidden></span>
+          </div>
+          <div class="game-actions">
+            <a class="pixel-button play" target="_blank" rel="noopener noreferrer">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 3 14 9-14 9V3z"></path></svg>
+              <span data-copy="play">开始</span>
+            </a>
+            <a class="pixel-button source" hidden target="_blank" rel="noopener noreferrer" aria-label="查看源码" title="查看源码">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="18" r="3"></circle><circle cx="6" cy="6" r="3"></circle><circle cx="18" cy="6" r="3"></circle><path d="M18 9v2c0 .6-.4 1-1 1H7c-.6 0-1-.4-1-1V9M12 12v3"></path></svg>
+              <span class="sr-only" data-copy="source">源码</span>
+            </a>
+            <a class="pixel-button acquire" target="_blank" rel="noopener noreferrer sponsored">
+              <span data-copy="acquire">获取</span>
+            </a>
+          </div>
+        </div>
+      </article>
+    </template>
+
+    <template id="card-ad-template">
+      <a class="card-ad" target="_blank" rel="noopener noreferrer sponsored">
+        <span class="card-ad-label">AD</span>
+        <strong></strong>
+        <span aria-hidden="true">→</span>
+      </a>
+    </template>
+
+    <script type="module" src="/app.js"></script>
+  </body>
+</html>

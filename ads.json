@@ -1,0 +1,31 @@
+{
+  "version": 1,
+  "enabled": true,
+  "acquireUrl": "https://pipifu.com",
+  "cardInterval": {
+    "min": 8,
+    "max": 12
+  },
+  "ads": [
+    { "id": "acg-01", "text": "免费 ACG 精选每日更新 200+，立即查看今日新内容", "url": "https://ecy.al" },
+    { "id": "acg-02", "text": "永久发布页已更新，收藏一次，精彩内容不再错过", "url": "https://ecy.al" },
+    { "id": "acg-03", "text": "今日热门 ACG 合集已上新，点击解锁更多精选", "url": "https://ecy.al" },
+    { "id": "acg-04", "text": "每日持续补充优质资源，现在进入抢先发现新作", "url": "https://ecy.al" },
+    { "id": "acg-05", "text": "高人气内容一站汇总，打开永久地址随时畅看", "url": "https://ecy.al" },
+    { "id": "acg-06", "text": "不想错过每日更新？立即收藏官方永久发布页", "url": "https://ecy.al" },
+    { "id": "acg-07", "text": "最新精选目录已经整理完成，点击即可快速浏览", "url": "https://ecy.al" },
+    { "id": "acg-08", "text": "热门资源持续上新中，今天的惊喜等你来发现", "url": "https://ecy.al" },
+    { "id": "acg-09", "text": "每日 200+ 内容更新入口，收藏后随时轻松找到", "url": "https://ecy.al" },
+    { "id": "acg-10", "text": "精选 ACG 内容实时补充，立即进入查看完整目录", "url": "https://ecy.al" },
+    { "id": "acg-11", "text": "永久入口稳定更新，打开即可获取今日精选推荐", "url": "https://ecy.al" },
+    { "id": "acg-12", "text": "更多高质量内容正在更新，点击前往永久发布页", "url": "https://ecy.al" },
+    { "id": "acg-13", "text": "把精彩内容装进口袋：立即收藏，回家不迷路", "url": "https://ecy.al" }
+  ],
+  "slots": {
+    "header": ["acg-01"],
+    "search": ["acg-02"],
+    "cards": ["acg-03", "acg-04", "acg-05", "acg-06", "acg-07", "acg-08", "acg-09", "acg-10", "acg-11", "acg-12", "acg-13"],
+    "gameStart": ["acg-06", "acg-01", "acg-13"],
+    "gameTimed": ["acg-03", "acg-08", "acg-10", "acg-12"]
+  }
+}

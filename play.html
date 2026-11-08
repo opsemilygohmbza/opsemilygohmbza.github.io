@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="zh-Hans">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="referrer" content="strict-origin-when-cross-origin" />
+    <meta name="theme-color" content="#17100a" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data: https:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; connect-src 'self' https:; frame-src https:; base-uri 'self'; form-action 'none'" />
+    <title>正在加载游戏 · Web RPG</title>
+    <style>
+      :root{color-scheme:dark;--ink:#28180e;--paper:#fff1c9;--green:#2e765f;--orange:#d78a32;--blue:#345e7f}*{box-sizing:border-box}html,body{width:100%;height:100%;margin:0;overflow:hidden;background:#17100a;color:var(--paper);font-family:"SFMono-Regular",Consolas,"PingFang SC","Microsoft YaHei",monospace}#game{position:fixed;inset:0;width:100%;height:100%;border:0;background:#17100a}.toolbar{position:fixed;z-index:10;top:10px;right:10px;display:flex;gap:8px}.toolbar a{display:inline-flex;min-height:38px;align-items:center;border:3px solid var(--ink);padding:8px 11px;background:var(--blue);color:#fff8df;box-shadow:4px 4px 0 var(--ink);font-size:12px;font-weight:800;text-decoration:none}.toolbar a:first-child{background:var(--orange);color:var(--ink)}.modal{position:fixed;z-index:20;inset:0;display:grid;place-items:center;padding:20px;background:rgb(0 0 0/.72)}.modal[hidden]{display:none}.dialog{width:min(460px,100%);border:4px solid var(--ink);padding:24px;background:var(--paper);color:var(--ink);box-shadow:9px 9px 0 rgb(0 0 0/.8);text-align:center}.dialog h1{margin:0 0 14px;font-size:1.2rem}.dialog p{margin:0;line-height:1.8}.dialog a,.dialog button{display:flex;width:100%;min-height:44px;align-items:center;justify-content:center;border:3px solid var(--ink);border-radius:0;margin-top:16px;padding:10px 14px;box-shadow:4px 4px 0 var(--ink);font:inherit;font-weight:900}.dialog a{background:var(--green);color:#fff8df;text-decoration:none}.dialog button{background:var(--orange);color:var(--ink);cursor:pointer}.dialog button:disabled{filter:grayscale(.8);cursor:not-allowed}.error{display:grid;min-height:100%;place-items:center;padding:28px;text-align:center}.error-box{width:min(620px,100%);border:4px solid var(--ink);padding:24px;background:var(--paper);color:var(--ink);box-shadow:8px 8px 0 #000}.error-box a{color:var(--blue);font-weight:800}@media(max-width:560px){.toolbar{right:7px;top:7px}.toolbar a{padding:7px 9px}.dialog{padding:20px}}
+    </style>
+  </head>
+  <body>
+    <iframe id="game" title="游戏内容" referrerpolicy="no-referrer" allow="fullscreen; autoplay; gamepad" allowfullscreen></iframe>
+    <nav class="toolbar" aria-label="游戏快捷操作">
+      <a href="/" aria-label="返回游戏目录">目录</a>
+      <a id="acquire" href="https://pipifu.com" target="_blank" rel="noopener noreferrer sponsored">获取</a>
+    </nav>
+
+    <section id="ad-modal" class="modal" hidden role="dialog" aria-modal="true" aria-labelledby="ad-title">
+      <div class="dialog">
+        <h1 id="ad-title">游戏提示</h1>
+        <p id="ad-text"></p>
+        <a id="ad-link" href="https://pipifu.com" target="_blank" rel="noopener noreferrer sponsored">立即查看</a>
+        <button id="ad-close" type="button" disabled>关闭</button>
+      </div>
+    </section>
+
+    <script type="module">
+      import { resolveGameUrl, getAdsForSlot } from './portal-lib.mjs';
+      const elements={game:document.querySelector('#game'),acquire:document.querySelector('#acquire'),modal:document.querySelector('#ad-modal'),title:document.querySelector('#ad-title'),text:document.querySelector('#ad-text'),link:document.querySelector('#ad-link'),close:document.querySelector('#ad-close')};
+      const state={config:{},ads:{ads:[],slots:{}},game:null,closeTimer:null};
+      const params=new URLSearchParams(location.search);
+      start().catch(showError);
+
+      async function start(){
+        const local=await fetchJson('/config.json');
+        state.config=await loadRuntimeConfig(local);
+        const [games,ads]=await Promise.all([fetchFirst(state.config.catalogEndpoints),fetchFirst(state.config.adsEndpoints||['/ads.json']).catch(()=>({enabled:false,ads:[],slots:{}}))]);
+        if(!Array.isArray(games))throw new Error('游戏目录格式无效');
+        state.ads=ads&&typeof ads==='object'?ads:{ads:[],slots:{}};
+        state.game=games.find(game=>game.id===params.get('id'));
+        if(!state.game)throw new Error('没有找到该游戏');
+        const target=buildPlayUrl(state.game.pagesUrl,state.game.entryPath);
+        if(!target||!(state.config.allowedGameHosts||[]).includes(target.hostname))throw new Error('游戏地址未通过本站校验');
+        const acquire=safeUrl(state.game.acquireUrl)||safeUrl(state.ads.acquireUrl||state.config.acquireUrl)||new URL('https://pipifu.com');
+        elements.acquire.href=acquire.href;
+        document.title=`${state.game.title||state.game.name||'游戏'} · ${state.config.siteName||'ecy.al'}`;
+        if(state.config.iframeSandbox)elements.game.setAttribute('sandbox',state.config.iframeSandbox);
+        elements.game.src=target.href;
+        sendEvent('game_open');
+        scheduleAds();
+      }
+
+      async function loadRuntimeConfig(local){
+        for(const endpoint of Array.isArray(local.runtimeConfigEndpoints)?local.runtimeConfigEndpoints:[]){
+          try{
+            const remote=await fetchJson(endpoint,4000);
+            return {...local,...remote,analytics:{...(local.analytics||{}),...(remote.analytics||{})},gameAd:{...(local.gameAd||{}),...(remote.gameAd||{})}};
+          }catch(error){console.warn(`Runtime config unavailable: ${endpoint}`,error)}
+        }
+        return local;
+      }
+
+      async function fetchFirst(endpoints){
+        let lastError;
+        for(const endpoint of Array.isArray(endpoints)?endpoints:[]){try{return await fetchJson(endpoint)}catch(error){lastError=error}}
+        throw lastError||new Error('没有配置数据地址');
+      }
+
+      async function fetchJson(value,timeoutMs=12000){
+        const url=safeUrl(value,location.href);if(!url)throw new Error(`无效地址：${value}`);
+        const controller=new AbortController();const timer=setTimeout(()=>controller.abort(),timeoutMs);
+        try{const response=await fetch(url,{cache:'no-store',signal:controller.signal});if(!response.ok)throw new Error(`${url} 返回 ${response.status}`);const type=response.headers.get('content-type')||'';if(!type.includes('json'))throw new Error(`${url} 未返回 JSON`);return await response.json()}finally{clearTimeout(timer)}
+      }
+
+      function scheduleAds(){
+        const options=state.config.gameAd||{};if(options.enabled===false||state.ads.enabled===false)return;
+        const first=Math.max(0,number(options.startDelaySeconds,45))*1000;
+        const repeat=Math.max(60,number(options.repeatSeconds,600))*1000;
+        setTimeout(()=>showAd('gameStart'),first);
+        setInterval(()=>showAd('gameTimed'),repeat);
+      }
+
+      function showAd(slot){
+        if(!elements.modal.hidden)return;
+        const ads=getSlot(slot);if(!ads.length)return;
+        const ad=ads[Math.floor(Math.random()*ads.length)];const url=safeUrl(ad.url);if(!url)return;
+        elements.title.textContent=slot==='gameStart'?'开始游戏提示':'游戏进行中';
+        elements.text.textContent=ad.text;
+        elements.link.href=url.href;
+        elements.modal.hidden=false;
+        startCloseCountdown();
+        sendEvent('game_ad_show',{slot});
+      }
+
+      function getSlot(slot){
+        return getAdsForSlot(state.ads,slot);
+      }
+
+      function startCloseCountdown(){
+        clearInterval(state.closeTimer);elements.close.disabled=true;
+        let remaining=Math.max(0,number(state.config.gameAd?.closeDelaySeconds,5));
+        elements.close.textContent=remaining?`关闭 (${remaining})`:'关闭';
+        if(!remaining){elements.close.disabled=false;return}
+        state.closeTimer=setInterval(()=>{remaining-=1;elements.close.textContent=remaining?`关闭 (${remaining})`:'关闭';if(remaining<=0){clearInterval(state.closeTimer);elements.close.disabled=false}},1000);
+      }
+
+      elements.close.addEventListener('click',()=>{elements.modal.hidden=true;sendEvent('game_ad_close')});
+      elements.link.addEventListener('click',()=>sendEvent('game_ad_click'));
+      elements.acquire.addEventListener('click',()=>sendEvent('acquire_click'));
+
+      function showError(error){console.error(error);document.body.innerHTML=`<main class="error"><div class="error-box"><h1>游戏暂时无法启动</h1><p>${escapeHtml(error?.message||'未知错误')}</p><p><a href="/">返回游戏目录</a></p></div></main>`}
+      function buildPlayUrl(pagesUrl,entryPath){return resolveGameUrl(pagesUrl,entryPath)}
+      function safeUrl(value,base){if(typeof value!=='string'||!value.trim())return null;try{const url=new URL(value,base);return ['http:','https:'].includes(url.protocol)?url:null}catch{return null}}
+      function number(value,fallback){const parsed=Number(value);return Number.isFinite(parsed)?parsed:fallback}
+      function escapeHtml(value){return String(value).replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]))}
+      function sendEvent(event,data={}){const endpoint=safeUrl(state.config.analytics?.endpoint);if(!endpoint)return;try{navigator.sendBeacon(endpoint,new Blob([JSON.stringify({event,site:state.config.analytics?.siteId||'rpg-portal',gameId:state.game?.id,path:location.pathname,at:new Date().toISOString(),...data})],{type:'application/json'}))}catch{}}
+    </script>
+  </body>
+</html>
