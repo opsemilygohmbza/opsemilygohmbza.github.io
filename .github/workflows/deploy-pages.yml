@@ -6,8 +6,6 @@ on:
   workflow_dispatch:
   repository_dispatch:
     types: [catalog-updated]
-  schedule:
-    - cron: "23,53 * * * *"
 
 permissions:
   contents: read
