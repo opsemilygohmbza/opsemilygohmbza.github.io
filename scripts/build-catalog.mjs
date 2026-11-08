@@ -1,5 +1,6 @@
 import fs from 'node:fs/promises';
 import { resolveGameUrl } from '../portal-lib.mjs';
+import {checkPagesEntry} from './check-pages-entry.mjs';
 
 const config = JSON.parse(await fs.readFile('config.json', 'utf8'));
 const sourceUrl = process.env.CATALOG_SOURCE_URL || 'https://raw.githubusercontent.com/opsemilygohmbza/game-index-runner/main/list.json';
@@ -19,11 +20,7 @@ await Promise.all(Array.from({ length: 5 }, async () => {
     const game = candidates[cursor++];
     const url = resolveGameUrl(game.pagesUrl, game.entryPath);
     try {
-      const response = await fetch(url, { redirect: 'error', signal: AbortSignal.timeout(15000) });
-      const html = await response.text();
-      if (!response.ok || !/text\/html/i.test(response.headers.get('content-type') || '') || !/rpg_core\.js|rmmz_core\.js/i.test(html)) {
-        throw new Error(`Entry is not an RPG Maker Web export (${response.status})`);
-      }
+      await checkPagesEntry(url);
       results.push({ game, ok: true });
     } catch (error) { results.push({ game, ok: false, error: error.message }); }
   }
