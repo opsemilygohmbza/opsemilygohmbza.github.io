@@ -1,13 +1,13 @@
 # opsemilygohmbza.github.io
 
-> 2026-11-08 恢复说明：这是从 2026-07-20 本地源码备份恢复的新账号部署。目录恢复不等于游戏文件恢复。旧账号的 Pages 地址已退出发布列表；只有在新账号实际部署并通过入口检查的游戏，才会写入门户 `games.json`。浏览器运行检查尚未接通，HTTP/HTML 通过不代表游戏全流程通过。
+> 2026-11-08 恢复说明：这是从 2026-07-20 本地源码备份恢复的新账号部署。目录恢复不等于游戏文件恢复。旧账号的 Pages 地址已退出发布列表；只有在新账号实际部署并通过入口检查的游戏，才会写入门户 `games.json`。部分游戏已有浏览器启动与新游戏场景的实际验证，记录在 `runtime`；尚未建立全量自动浏览器验证，HTTP/HTML 通过也不代表完整游戏流程通过。
 
 ecy.al 的公开 Web RPG 门户。仓库只承载门户、启动器和发布时生成的可用游戏目录；游戏文件由各游戏 Fork 的 GitHub Pages 承载。
 
 ## 数据闭环
 
 1. `game-index-runner/list.json` 是唯一游戏真源。
-2. Pages 工作流运行 `scripts/build-catalog.mjs`，只保留 `verified`、属于 `allowedGameHosts` 且实际返回成功状态的游戏。
+2. Pages 工作流运行 `scripts/build-catalog.mjs`，通过 GitHub Contents API 定位 `list.json` 的确定 Git blob，再读取该版本，避免 `raw/main` 缓存导致刚更新的记录延后出现。只保留 `verified`、属于 `allowedGameHosts` 且入口与启动脚本检查成功的游戏；兼容新版 MZ 仅由 `js/main.js` 动态加载核心的入口。
 3. 门户只读取本次部署生成的 `games.json`。
 4. `config.json` 管理品牌、发布页、获取链接、启动器、允许的游戏域名、统计端点和游戏广告时间。
 5. `ads.json` 管理 13 条广告文案及顶部、搜索下方、卡片间、游戏开始和游戏定时广告位。
